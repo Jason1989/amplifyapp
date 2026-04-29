@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>avacadolphin — a little warmth, every visit</title>
+  <meta name="description" content="A small dose of positivity every time you visit." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-light: #e8f5ee;
+      --green-mid: #7ec8a0;
+      --green-dark: #3a7a55;
+      --amber-light: #fef8ed;
+      --amber-mid: #f0c97a;
+      --amber-dark: #8a5e10;
+      --blue-light: #edf5fc;
+      --blue-mid: #87bfde;
+      --blue-dark: #1f5f8a;
+      --text-primary: #2c2c2a;
+      --text-secondary: #5f5e5a;
+      --text-tertiary: #888780;
+      --bg: #fdfcf8;
+      --card-bg: #ffffff;
+      --border: rgba(0,0,0,0.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text-primary: #f0ede6;
+        --text-secondary: #b4b2a9;
+        --text-tertiary: #888780;
+        --bg: #1a1a18;
+        --card-bg: #242420;
+        --border: rgba(255,255,255,0.09);
+        --green-light: #0e2b1a;
+        --amber-light: #2a1f06;
+        --blue-light: #0b1e2d;
+      }
+    }
+    html, body {
+      height: 100%;
+    }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+    /* Soft background blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(60px);
+      opacity: 0.18;
+    }
+    .blob1 { width: 400px; height: 400px; background: var(--green-mid); top: -100px; left: -120px; }
+    .blob2 { width: 320px; height: 320px; background: var(--amber-mid); bottom: -80px; right: -80px; }
+    .blob3 { width: 220px; height: 220px; background: var(--blue-mid); top: 45%; left: 65%; }
+    /* Main wrapper */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 480px;
+    }
+    /* Site name */
+    .site-name {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 2.5rem;
+    }
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.8rem 2.5rem 2.2rem;
+      width: 100%;
+      text-align: center;
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+    .card.fade-out {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    /* Emoji decoration */
+    .deco {
+      font-size: 36px;
+      display: block;
+      margin-bottom: 1.2rem;
+      line-height: 1;
+    }
+    /* Type badge */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 1.5rem;
+    }
+    .badge-quote  { background: var(--green-light); color: var(--green-dark); border: 1px solid rgba(126,200,160,0.3); }
+    .badge-prompt { background: var(--amber-light); color: var(--amber-dark); border: 1px solid rgba(240,201,122,0.35); }
+    .badge-fact   { background: var(--blue-light);  color: var(--blue-dark);  border: 1px solid rgba(135,191,222,0.3); }
+    /* Main quote / message text */
+    .main-text {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 21px;
+      line-height: 1.7;
+      font-weight: 400;
+      color: var(--text-primary);
+      margin-bottom: 1.2rem;
+    }
+    /* Source / attribution */
+    .source {
+      font-size: 13px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--text-tertiary);
+      letter-spacing: 0.03em;
+    }
+    /* Bottom actions */
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-next {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 9px 22px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.04em;
+    }
+    .btn-next:hover {
+      background: var(--green-light);
+      border-color: rgba(126,200,160,0.4);
+      color: var(--green-dark);
+    }
+    .btn-next:active { transform: scale(0.97); }
+    /* Dot navigation */
+    .dot-nav { display: flex; gap: 7px; align-items: center; }
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--border);
+      border: 1px solid var(--text-tertiary);
+      opacity: 0.3;
+      transition: opacity 0.3s, transform 0.3s;
+      cursor: default;
+    }
+    .dot.active { opacity: 1; transform: scale(1.3); background: var(--text-tertiary); }
+    /* Footer tagline */
+    .tagline {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--text-tertiary);
+      margin-top: 2.2rem;
+      letter-spacing: 0.07em;
+    }
+    @media (max-width: 480px) {
+      .main-text { font-size: 18px; }
+      .card { padding: 2rem 1.5rem 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="wrapper">
+    <div class="site-name">avacadolphin</div>
+    <div class="card" id="card">
+      <span class="deco" id="deco">🌿</span>
+      <span class="badge" id="badge">quote</span>
+      <p class="main-text" id="main-text"></p>
+      <p class="source" id="source"></p>
+    </div>
+    <div class="actions">
+      <div class="dot-nav" id="dots"></div>
+      <button class="btn-next" id="btn-next">another one →</button>
+    </div>
+    <p class="tagline">a small dose of warmth, every visit</p>
+  </div>
+  <script>
+    const moments = [
+      { type: "quote",  deco: "🌱", text: "You are allowed to be both a masterpiece and a work in progress, simultaneously.", source: "— Sophia Bush" },
+      { type: "prompt", deco: "✉️", text: "Think of someone who made you smile this week. Take a moment to let them know.", source: "a gentle nudge" },
+      { type: "fact",   deco: "🐬", text: "Dolphins sleep with one eye open — they rest one half of their brain at a time, always staying a little aware.", source: "a fun fact" },
+      { type: "quote",  deco: "🥑", text: "Be somebody who makes everybody feel like a somebody.", source: "— Kid President" },
+      { type: "prompt", deco: "☀️", text: "Name three things, however small, that went right today.", source: "a little reflection" },
+      { type: "quote",  deco: "🌊", text: "Even the darkest night will end, and the sun will rise.", source: "— Victor Hugo" },
+      { type: "fact",   deco: "🌿", text: "Avocados are technically a fruit — a single-seeded berry — and they take about 18 months to grow from flower to the one in your hand.", source: "a fun fact" },
+      { type: "prompt", deco: "💌", text: "Write down one kind thing you'd say to a friend who was having your exact day.", source: "a gentle nudge" },
+      { type: "quote",  deco: "🌸", text: "Wherever you are is exactly where you need to be.", source: "— unknown" },
+      { type: "fact",   deco: "🐬", text: "Dolphins have names for each other — they develop unique signature whistles that other dolphins use to call them.", source: "a fun fact" },
+      { type: "prompt", deco: "🌙", text: "Before you sleep tonight, think of one person you're grateful to have in your life.", source: "a gentle nudge" },
+      { type: "quote",  deco: "🌱", text: "Start where you are. Use what you have. Do what you can.", source: "— Arthur Ashe" },
+      { type: "fact",   deco: "🥑", text: "The word 'avocado' comes from the Nahuatl word 'āhuacatl'. The Aztecs called it the fertility fruit.", source: "a fun fact" },
+      { type: "quote",  deco: "☁️", text: "Kindness is free. Sprinkle that stuff everywhere.", source: "— unknown" },
+      { type: "prompt", deco: "🌻", text: "Step outside for two minutes, even just to feel the air. That counts.", source: "a gentle nudge" },
+      { type: "quote",  deco: "🐬", text: "In every walk with nature, one receives far more than they seek.", source: "— John Muir" },
+      { type: "fact",   deco: "🌊", text: "The ocean produces over 50% of the world's oxygen — more than all the world's forests combined.", source: "a fun fact" },
+      { type: "prompt", deco: "🕯️", text: "Do one small thing today purely because it makes you happy — no reason needed.", source: "a gentle nudge" },
+    ];
+    const badgeClass = { quote: "badge-quote", prompt: "badge-prompt", fact: "badge-fact" };
+    const badgeLabel = { quote: "quote", prompt: "gentle nudge", fact: "fun fact" };
+    const DOTS = 5;
+    let current = Math.floor(Math.random() * moments.length);
+    let history = [current];
+    const cardEl   = document.getElementById("card");
+    const decoEl   = document.getElementById("deco");
+    const badgeEl  = document.getElementById("badge");
+    const textEl   = document.getElementById("main-text");
+    const sourceEl = document.getElementById("source");
+    const dotsEl   = document.getElementById("dots");
+    function render(idx) {
+      const m = moments[idx];
+      decoEl.textContent   = m.deco;
+      badgeEl.textContent  = badgeLabel[m.type];
+      badgeEl.className    = "badge " + badgeClass[m.type];
+      textEl.textContent   = m.text;
+      sourceEl.textContent = m.source;
+    }
+    function buildDots() {
+      dotsEl.innerHTML = "";
+      const count = Math.min(history.length, DOTS);
+      for (let i = 0; i < count; i++) {
+        const d = document.createElement("div");
+        d.className = "dot" + (i === count - 1 ? " active" : "");
+        dotsEl.appendChild(d);
+      }
+    }
+    function nextCard() {
+      cardEl.classList.add("fade-out");
+      setTimeout(() => {
+        let next;
+        do { next = Math.floor(Math.random() * moments.length); } while (next === current);
+        current = next;
+        history.push(current);
+        render(current);
+        buildDots();
+        cardEl.classList.remove("fade-out");
+      }, 300);
+    }
+    document.getElementById("btn-next").addEventListener("click", nextCard);
+    render(current);
+    buildDots();
+  </script>
+</body>
+</html>

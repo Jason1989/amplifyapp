@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guac Builder — avacadolphin</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#fdfcf8" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-light: #e8f5ee; --green-mid: #7ec8a0; --green-dark: #3a7a55;
+      --amber-light: #fef8ed; --amber-mid: #f0c97a; --amber-dark: #8a5e10;
+      --blue-light: #edf5fc;  --blue-mid: #87bfde;  --blue-dark: #1f5f8a;
+      --text-primary: #2c2c2a; --text-secondary: #5f5e5a; --text-tertiary: #888780;
+      --bg: #fdfcf8; --card-bg: #ffffff; --border: rgba(0,0,0,0.08);
+      --red-light: #fef0f0; --red-dark: #8a2020;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text-primary: #f0ede6; --text-secondary: #b4b2a9; --text-tertiary: #888780;
+        --bg: #1a1a18; --card-bg: #242420; --border: rgba(255,255,255,0.09);
+        --green-light: #0e2b1a; --amber-light: #2a1f06; --blue-light: #0b1e2d;
+        --red-light: #2a0e0e;
+      }
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg); color: var(--text-primary);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; padding: 0 1.2rem 2rem;
+      overflow-x: hidden; position: relative;
+    }
+    .blob { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(60px); opacity: 0.14; }
+    .blob1 { width: 350px; height: 350px; background: var(--green-mid); top: -100px; left: -100px; }
+    .blob2 { width: 280px; height: 280px; background: var(--amber-mid); bottom: -60px; right: -60px; }
+    .top-bar {
+      position: relative; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; max-width: 480px;
+      padding: 1.2rem 0 0;
+    }
+    .back {
+      font-size: 12px; color: var(--text-tertiary); text-decoration: none;
+      letter-spacing: 0.1em; transition: color 0.2s;
+    }
+    .back:hover { color: var(--green-dark); }
+    .site-label {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 12px; color: var(--text-tertiary);
+      letter-spacing: 0.15em; text-transform: uppercase;
+    }
+    .wrapper {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      width: 100%; max-width: 480px; flex: 1;
+    }
+    /* Timer bar */
+    .timer-wrap {
+      width: 100%; margin: 1.4rem 0 1rem;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .timer-bar-bg {
+      flex: 1; height: 6px; border-radius: 6px;
+      background: var(--border); overflow: hidden;
+    }
+    .timer-bar {
+      height: 100%; border-radius: 6px;
+      background: var(--green-mid);
+      transition: width 0.1s linear, background 0.4s;
+    }
+    .timer-bar.warn  { background: var(--amber-mid); }
+    .timer-bar.danger { background: #e07070; }
+    .timer-text {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 16px; min-width: 28px; text-align: right;
+      color: var(--text-secondary);
+    }
+    /* Round + score */
+    .meta {
+      display: flex; justify-content: space-between;
+      width: 100%; margin-bottom: 1rem;
+    }
+    .meta-item { font-size: 12px; color: var(--text-tertiary); letter-spacing: 0.08em; }
+    .meta-item span {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 16px; color: var(--text-primary); margin-left: 6px;
+    }
+    /* Recipe card */
+    .recipe-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 18px; padding: 1.2rem 1.5rem;
+      width: 100%; margin-bottom: 1.2rem;
+    }
+    .recipe-title {
+      font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-tertiary); margin-bottom: 0.7rem;
+    }
+    .recipe-items {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .recipe-chip {
+      font-size: 13px; padding: 4px 12px; border-radius: 14px;
+      background: var(--green-light); color: var(--green-dark);
+      border: 1px solid rgba(126,200,160,0.35);
+      transition: all 0.25s;
+    }
+    .recipe-chip.found {
+      background: var(--green-mid); color: #fff;
+      border-color: var(--green-mid);
+      text-decoration: line-through; opacity: 0.7;
+    }
+    /* Ingredient grid */
+    .grid-label {
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--text-tertiary); margin-bottom: 0.8rem; align-self: flex-start;
+    }
+    .ingredients-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; width: 100%; margin-bottom: 1rem;
+    }
+    .ing-btn {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1rem 0.5rem;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      transition: all 0.18s;
+    }
+    .ing-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+    .ing-btn:active { transform: scale(0.95); }
+    .ing-btn.correct {
+      background: var(--green-light); border-color: rgba(126,200,160,0.5);
+      animation: pop 0.25s ease;
+    }
+    .ing-btn.wrong {
+      background: var(--red-light); border-color: rgba(220,100,100,0.4);
+      animation: shake 0.3s ease;
+    }
+    .ing-btn.used { opacity: 0.35; pointer-events: none; }
+    .ing-emoji { font-size: 28px; line-height: 1; }
+    .ing-name  { font-size: 11px; color: var(--text-tertiary); text-align: center; letter-spacing: 0.04em; }
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%  { transform: translateX(-5px); }
+      75%  { transform: translateX(5px); }
+    }
+    /* Feedback flash */
+    .feedback {
+      font-size: 13px; color: var(--text-tertiary);
+      min-height: 20px; text-align: center;
+      transition: opacity 0.3s;
+    }
+    /* Overlay */
+    .overlay {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 1rem; padding: 2rem;
+      background: rgba(253,252,248,0.94);
+      z-index: 30; transition: opacity 0.3s;
+    }
+    @media (prefers-color-scheme: dark) { .overlay { background: rgba(26,26,24,0.94); } }
+    .overlay.hidden { opacity: 0; pointer-events: none; }
+    .overlay-icon { font-size: 52px; line-height: 1; }
+    .overlay-title {
+      font-family: 'Lora', Georgia, serif; font-size: 26px;
+      color: var(--text-primary); text-align: center;
+    }
+    .overlay-sub {
+      font-size: 14px; font-weight: 300;
+      color: var(--text-tertiary); text-align: center; line-height: 1.6;
+      max-width: 320px;
+    }
+    .stars { font-size: 28px; letter-spacing: 4px; }
+    .score-big {
+      font-family: 'Lora', Georgia, serif; font-size: 42px;
+      color: var(--green-dark);
+    }
+    .btn-play {
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      background: var(--green-light); border: 1px solid rgba(126,200,160,0.4);
+      color: var(--green-dark); border-radius: 24px; padding: 11px 32px;
+      cursor: pointer; letter-spacing: 0.06em; transition: all 0.2s; margin-top: 0.4rem;
+    }
+    .btn-play:hover { background: var(--green-mid); color: #fff; }
+    .btn-play:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+
+  <div class="top-bar">
+    <a class="back" href="games.html">← games</a>
+    <div class="site-label">avacadolphin</div>
+  </div>
+
+  <div class="wrapper">
+    <div class="timer-wrap">
+      <div class="timer-bar-bg"><div class="timer-bar" id="timer-bar"></div></div>
+      <div class="timer-text" id="timer-text">20</div>
+    </div>
+    <div class="meta">
+      <div class="meta-item">round <span id="round-display">1</span></div>
+      <div class="meta-item">score <span id="score-display">0</span></div>
+    </div>
+    <div class="recipe-card">
+      <div class="recipe-title">classic guacamole needs:</div>
+      <div class="recipe-items" id="recipe-items"></div>
+    </div>
+    <div class="grid-label">pick your ingredients</div>
+    <div class="ingredients-grid" id="ingredients-grid"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- Start screen -->
+  <div class="overlay" id="start-screen">
+    <div class="overlay-icon">🥑</div>
+    <div class="overlay-title">Guac Builder</div>
+    <div class="overlay-sub">Pick the right ingredients for classic guacamole before time runs out.<br>Wrong picks cost you 3 seconds!</div>
+    <button class="btn-play" id="start-btn">let's cook →</button>
+  </div>
+
+  <!-- Round complete -->
+  <div class="overlay hidden" id="round-screen">
+    <div class="overlay-icon">✨</div>
+    <div class="overlay-title" id="round-title">Round 1 done!</div>
+    <div class="overlay-sub" id="round-sub"></div>
+    <button class="btn-play" id="next-btn">next round →</button>
+  </div>
+
+  <!-- Game over -->
+  <div class="overlay hidden" id="over-screen">
+    <div class="overlay-icon" id="over-icon">🥑</div>
+    <div class="overlay-title" id="over-title">guac complete!</div>
+    <div class="stars" id="stars"></div>
+    <div class="score-big" id="score-big"></div>
+    <div class="overlay-sub" id="over-sub"></div>
+    <button class="btn-play" id="retry-btn">make another →</button>
+  </div>
+
+  <script>
+    // ── Ingredient data ────────────────────────────────────────────────────
+    const CORRECT = [
+      { emoji: "🥑", name: "avocado"   },
+      { emoji: "🍋", name: "lime"      },
+      { emoji: "🧂", name: "salt"      },
+      { emoji: "🌿", name: "cilantro"  },
+      { emoji: "🧅", name: "onion"     },
+      { emoji: "🌶️", name: "jalapeño" },
+    ];
+    const WRONG = [
+      { emoji: "🧀", name: "cheese"    },
+      { emoji: "🍅", name: "tomato"    },
+      { emoji: "🧄", name: "garlic"    },
+      { emoji: "🥕", name: "carrot"    },
+      { emoji: "🫑", name: "bell pepper" },
+      { emoji: "🍌", name: "banana"    },
+      { emoji: "🥦", name: "broccoli"  },
+      { emoji: "🫒", name: "olive"     },
+      { emoji: "🍯", name: "honey"     },
+      { emoji: "🧁", name: "cupcake"   },
+    ];
+
+    const ROUNDS     = 3;
+    const BASE_TIME  = 20; // seconds per round
+    const WRONG_PEN  = 3;  // seconds lost per wrong pick
+
+    let round, score, timeLeft, timerInterval, found, needed;
+    let feedbackTimeout;
+
+    // ── DOM refs ───────────────────────────────────────────────────────────
+    const timerBar     = document.getElementById("timer-bar");
+    const timerText    = document.getElementById("timer-text");
+    const roundDisplay = document.getElementById("round-display");
+    const scoreDisplay = document.getElementById("score-display");
+    const recipeItems  = document.getElementById("recipe-items");
+    const grid         = document.getElementById("ingredients-grid");
+    const feedbackEl   = document.getElementById("feedback");
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function setFeedback(msg, color) {
+      clearTimeout(feedbackTimeout);
+      feedbackEl.textContent = msg;
+      feedbackEl.style.color = color || "var(--text-tertiary)";
+      feedbackTimeout = setTimeout(() => { feedbackEl.textContent = ""; }, 1200);
+    }
+
+    // ── Timer ──────────────────────────────────────────────────────────────
+    function startTimer(duration) {
+      clearInterval(timerInterval);
+      timeLeft = duration;
+      updateTimerUI();
+      timerInterval = setInterval(() => {
+        timeLeft = Math.max(0, timeLeft - 0.1);
+        updateTimerUI();
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          endRound(false);
+        }
+      }, 100);
+    }
+
+    function updateTimerUI() {
+      const pct = (timeLeft / BASE_TIME) * 100;
+      timerBar.style.width = pct + "%";
+      timerText.textContent = Math.ceil(timeLeft);
+      timerBar.className = "timer-bar" +
+        (pct < 25 ? " danger" : pct < 50 ? " warn" : "");
+    }
+
+    function penalise() {
+      timeLeft = Math.max(0, timeLeft - WRONG_PEN);
+      updateTimerUI();
+    }
+
+    // ── Round setup ────────────────────────────────────────────────────────
+    function buildRound() {
+      // How many correct items needed this round (increases with round)
+      const neededCount = Math.min(3 + round, CORRECT.length);
+      needed = shuffle(CORRECT).slice(0, neededCount);
+      found  = new Set();
+
+      // Build recipe chips
+      recipeItems.innerHTML = "";
+      needed.forEach(ing => {
+        const chip = document.createElement("span");
+        chip.className = "recipe-chip";
+        chip.textContent = `${ing.emoji} ${ing.name}`;
+        chip.dataset.name = ing.name;
+        recipeItems.appendChild(chip);
+      });
+
+      // Build grid: correct needed + some wrong ones
+      const wrongCount = 9 - needed.length;
+      const wrongs = shuffle(WRONG).slice(0, wrongCount);
+      const all = shuffle([...needed, ...wrongs]);
+
+      grid.innerHTML = "";
+      all.forEach(ing => {
+        const btn = document.createElement("button");
+        btn.className = "ing-btn";
+        btn.innerHTML = `<span class="ing-emoji">${ing.emoji}</span><span class="ing-name">${ing.name}</span>`;
+        btn.dataset.name  = ing.name;
+        btn.dataset.correct = needed.some(n => n.name === ing.name) ? "1" : "0";
+        btn.addEventListener("click", () => onPick(btn));
+        grid.appendChild(btn);
+      });
+
+      roundDisplay.textContent = round;
+      scoreDisplay.textContent = score;
+      startTimer(BASE_TIME);
+    }
+
+    function onPick(btn) {
+      if (btn.classList.contains("used")) return;
+      if (btn.dataset.correct === "1") {
+        const name = btn.dataset.name;
+        if (found.has(name)) return;
+        found.add(name);
+        btn.classList.add("correct", "used");
+        // Mark recipe chip
+        recipeItems.querySelectorAll(".recipe-chip").forEach(chip => {
+          if (chip.dataset.name === name) chip.classList.add("found");
+        });
+        score += 10;
+        scoreDisplay.textContent = score;
+        setFeedback("nice! +10 ✓", "var(--green-dark)");
+        if (found.size === needed.length) {
+          clearInterval(timerInterval);
+          // Bonus for time left
+          const bonus = Math.round(timeLeft) * 2;
+          score += bonus;
+          scoreDisplay.textContent = score;
+          setTimeout(() => endRound(true, bonus), 400);
+        }
+      } else {
+        btn.classList.add("wrong");
+        penalise();
+        setFeedback(`−${WRONG_PEN}s ✗`, "#c0504d");
+        setTimeout(() => btn.classList.remove("wrong"), 400);
+      }
+    }
+
+    // ── Round end ──────────────────────────────────────────────────────────
+    function endRound(success, bonus = 0) {
+      clearInterval(timerInterval);
+      if (round >= ROUNDS) {
+        showEnd();
+        return;
+      }
+      const roundScreen = document.getElementById("round-screen");
+      document.getElementById("round-title").textContent = success
+        ? `Round ${round} done! 🎉` : `Time's up! ⏰`;
+      document.getElementById("round-sub").textContent = success
+        ? `All ingredients found! +${bonus} time bonus.`
+        : `You found ${found.size} of ${needed.size || needed.length} ingredients.`;
+      roundScreen.classList.remove("hidden");
+    }
+
+    document.getElementById("next-btn").addEventListener("click", () => {
+      document.getElementById("round-screen").classList.add("hidden");
+      round++;
+      buildRound();
+    });
+
+    // ── End screen ─────────────────────────────────────────────────────────
+    function showEnd() {
+      const ratings = [
+        { min: 200, stars: "⭐⭐⭐", title: "legendary guac!", msg: "Gordon Ramsay is taking notes. 🥑" },
+        { min: 120, stars: "⭐⭐",   title: "solid guac!",    msg: "That's a solid bowl right there. 🌿" },
+        { min:   0, stars: "⭐",    title: "guac attempt",   msg: "Needs work, but we believe in you. 💛" },
+      ];
+      const r = ratings.find(r => score >= r.min);
+      document.getElementById("over-icon").textContent   = r.stars.includes("⭐⭐⭐") ? "🏆" : "🥑";
+      document.getElementById("over-title").textContent  = r.title;
+      document.getElementById("stars").textContent       = r.stars;
+      document.getElementById("score-big").textContent   = score + " pts";
+      document.getElementById("over-sub").textContent    = r.msg;
+      document.getElementById("over-screen").classList.remove("hidden");
+    }
+
+    document.getElementById("retry-btn").addEventListener("click", startGame);
+
+    // ── Start ──────────────────────────────────────────────────────────────
+    function startGame() {
+      round = 1; score = 0;
+      document.getElementById("over-screen").classList.add("hidden");
+      document.getElementById("start-screen").classList.add("hidden");
+      buildRound();
+    }
+
+    document.getElementById("start-btn").addEventListener("click", startGame);
+  </script>
+</body>
+</html>

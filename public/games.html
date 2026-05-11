@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>avacadolphin — games</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#fdfcf8" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-light: #e8f5ee; --green-mid: #7ec8a0; --green-dark: #3a7a55;
+      --amber-light: #fef8ed; --amber-mid: #f0c97a; --amber-dark: #8a5e10;
+      --blue-light: #edf5fc;  --blue-mid: #87bfde;  --blue-dark: #1f5f8a;
+      --text-primary: #2c2c2a; --text-secondary: #5f5e5a; --text-tertiary: #888780;
+      --bg: #fdfcf8; --card-bg: #ffffff; --border: rgba(0,0,0,0.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text-primary: #f0ede6; --text-secondary: #b4b2a9; --text-tertiary: #888780;
+        --bg: #1a1a18; --card-bg: #242420; --border: rgba(255,255,255,0.09);
+        --green-light: #0e2b1a; --amber-light: #2a1f06; --blue-light: #0b1e2d;
+      }
+    }
+    html, body { height: 100%; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem 1.5rem;
+      overflow-x: hidden; position: relative;
+    }
+    .blob { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; filter: blur(60px); opacity: 0.18; }
+    .blob1 { width: 400px; height: 400px; background: var(--green-mid); top: -100px; left: -120px; }
+    .blob2 { width: 320px; height: 320px; background: var(--amber-mid); bottom: -80px; right: -80px; }
+    .blob3 { width: 220px; height: 220px; background: var(--blue-mid); top: 45%; left: 65%; }
+    .wrapper {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      width: 100%; max-width: 480px;
+    }
+    .back {
+      font-size: 12px; color: var(--text-tertiary); text-decoration: none;
+      letter-spacing: 0.1em; margin-bottom: 2rem;
+      transition: color 0.2s;
+    }
+    .back:hover { color: var(--green-dark); }
+    .site-name {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 13px; font-weight: 400;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--text-tertiary); margin-bottom: 0.5rem;
+    }
+    .page-title {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 28px; font-weight: 400;
+      color: var(--text-primary); margin-bottom: 0.6rem; text-align: center;
+    }
+    .page-sub {
+      font-size: 13px; font-weight: 300; color: var(--text-tertiary);
+      margin-bottom: 2.5rem; text-align: center; letter-spacing: 0.04em;
+    }
+    .games-grid {
+      display: flex; flex-direction: column; gap: 1rem; width: 100%;
+    }
+    .game-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 1.8rem 2rem;
+      text-decoration: none; color: inherit;
+      display: flex; align-items: center; gap: 1.4rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .game-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+    }
+    .game-card:active { transform: scale(0.98); }
+    .game-icon {
+      font-size: 42px; line-height: 1;
+      flex-shrink: 0;
+    }
+    .game-info { flex: 1; }
+    .game-name {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 18px; font-weight: 400;
+      color: var(--text-primary); margin-bottom: 0.3rem;
+    }
+    .game-desc {
+      font-size: 12px; font-weight: 300;
+      color: var(--text-tertiary); line-height: 1.5;
+    }
+    .game-badge {
+      font-size: 10px; letter-spacing: 0.12em;
+      text-transform: uppercase; padding: 3px 10px;
+      border-radius: 12px; flex-shrink: 0;
+    }
+    .badge-blue { background: var(--blue-light); color: var(--blue-dark); border: 1px solid rgba(135,191,222,0.3); }
+    .badge-green { background: var(--green-light); color: var(--green-dark); border: 1px solid rgba(126,200,160,0.3); }
+    .tagline {
+      font-size: 12px; font-weight: 300; color: var(--text-tertiary);
+      margin-top: 2.2rem; letter-spacing: 0.07em;
+    }
+  </style>
+</head>
+<body>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="wrapper">
+    <a class="back" href="index.html">← back to warmth</a>
+    <div class="site-name">avacadolphin</div>
+    <h1 class="page-title">mini games</h1>
+    <p class="page-sub">a little play, on theme</p>
+    <div class="games-grid">
+      <a class="game-card" href="dolphin-leap.html">
+        <div class="game-icon">🐬</div>
+        <div class="game-info">
+          <div class="game-name">Dolphin Leap</div>
+          <div class="game-desc">Tap to jump, ride the waves, don't crash. How far can you go?</div>
+        </div>
+        <span class="game-badge badge-blue">arcade</span>
+      </a>
+      <a class="game-card" href="guac-builder.html">
+        <div class="game-icon">🥑</div>
+        <div class="game-info">
+          <div class="game-name">Guac Builder</div>
+          <div class="game-desc">Pick the right ingredients before time runs out. Make the perfect guac.</div>
+        </div>
+        <span class="game-badge badge-green">quiz</span>
+      </a>
+    </div>
+    <p class="tagline">a small dose of warmth, every visit</p>
+  </div>
+</body>
+</html>

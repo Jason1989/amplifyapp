@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Dolphin Leap — avacadolphin</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#fdfcf8" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green-light: #e8f5ee; --green-mid: #7ec8a0; --green-dark: #3a7a55;
+      --amber-light: #fef8ed; --amber-mid: #f0c97a; --amber-dark: #8a5e10;
+      --blue-light: #edf5fc;  --blue-mid: #87bfde;  --blue-dark: #1f5f8a;
+      --text-primary: #2c2c2a; --text-secondary: #5f5e5a; --text-tertiary: #888780;
+      --bg: #fdfcf8; --card-bg: #ffffff; --border: rgba(0,0,0,0.08);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text-primary: #f0ede6; --text-secondary: #b4b2a9; --text-tertiary: #888780;
+        --bg: #1a1a18; --card-bg: #242420; --border: rgba(255,255,255,0.09);
+        --green-light: #0e2b1a; --amber-light: #2a1f06; --blue-light: #0b1e2d;
+      }
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .top-bar {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.4rem;
+      z-index: 10;
+    }
+    .back {
+      font-size: 12px; color: var(--text-tertiary); text-decoration: none;
+      letter-spacing: 0.1em; transition: color 0.2s;
+    }
+    .back:hover { color: var(--blue-dark); }
+    .score-wrap { display: flex; gap: 1.2rem; align-items: center; }
+    .score-label {
+      font-size: 12px; color: var(--text-tertiary); letter-spacing: 0.08em;
+    }
+    .score-val {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 18px; color: var(--text-primary);
+    }
+    canvas {
+      display: block;
+      touch-action: none;
+      cursor: pointer;
+    }
+    /* Overlay screens */
+    .overlay {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 1rem; padding: 2rem;
+      background: rgba(253,252,248,0.92);
+      z-index: 20;
+      transition: opacity 0.3s;
+    }
+    @media (prefers-color-scheme: dark) {
+      .overlay { background: rgba(26,26,24,0.92); }
+    }
+    .overlay.hidden { opacity: 0; pointer-events: none; }
+    .overlay-icon { font-size: 52px; line-height: 1; }
+    .overlay-title {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 26px; font-weight: 400;
+      color: var(--text-primary); text-align: center;
+    }
+    .overlay-sub {
+      font-size: 14px; font-weight: 300;
+      color: var(--text-tertiary); text-align: center; line-height: 1.6;
+    }
+    .overlay-scores {
+      display: flex; gap: 2.5rem; margin: 0.5rem 0;
+    }
+    .score-block { text-align: center; }
+    .score-block .val {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 32px; color: var(--blue-dark); display: block;
+    }
+    .score-block .lbl {
+      font-size: 11px; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-tertiary);
+    }
+    .btn-play {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 400;
+      background: var(--blue-light);
+      border: 1px solid rgba(135,191,222,0.4);
+      color: var(--blue-dark);
+      border-radius: 24px; padding: 11px 32px;
+      cursor: pointer; letter-spacing: 0.06em;
+      transition: all 0.2s; margin-top: 0.5rem;
+    }
+    .btn-play:hover { background: var(--blue-mid); color: #fff; }
+    .btn-play:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <a class="back" href="games.html">← games</a>
+    <div class="score-wrap">
+      <span class="score-label">best</span>
+      <span class="score-val" id="best-display">0</span>
+      <span class="score-label">score</span>
+      <span class="score-val" id="score-display">0</span>
+    </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <!-- Start screen -->
+  <div class="overlay" id="start-screen">
+    <div class="overlay-icon">🐬</div>
+    <div class="overlay-title">Dolphin Leap</div>
+    <div class="overlay-sub">Tap or press Space to jump.<br>Clear the waves. Don't crash.</div>
+    <button class="btn-play" id="start-btn">let's go →</button>
+  </div>
+
+  <!-- Game over screen -->
+  <div class="overlay hidden" id="over-screen">
+    <div class="overlay-icon">🌊</div>
+    <div class="overlay-title">splashed!</div>
+    <div class="overlay-scores">
+      <div class="score-block">
+        <span class="val" id="final-score">0</span>
+        <span class="lbl">score</span>
+      </div>
+      <div class="score-block">
+        <span class="val" id="final-best">0</span>
+        <span class="lbl">best</span>
+      </div>
+    </div>
+    <div class="overlay-sub" id="over-msg"></div>
+    <button class="btn-play" id="retry-btn">try again →</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx    = canvas.getContext("2d");
+
+    // ── Responsive sizing ──────────────────────────────────────────────────
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    // ── Colors ─────────────────────────────────────────────────────────────
+    const isDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const C = {
+      sky:      () => isDark() ? "#0b1e2d" : "#edf5fc",
+      water:    () => isDark() ? "#0e2b1a" : "#e8f5ee",
+      wave:     () => isDark() ? "#1f5f8a" : "#87bfde",
+      waveTop:  () => isDark() ? "#87bfde" : "#3a7a55",
+      dolphin:  () => "#87bfde",
+      eye:      () => isDark() ? "#0b1e2d" : "#1f5f8a",
+      splash:   () => "#87bfde",
+    };
+
+    // ── Game state ─────────────────────────────────────────────────────────
+    const GRAVITY    = 0.55;
+    const JUMP_VEL   = -11;
+    const GROUND_H   = () => canvas.height * 0.65; // water surface y
+    const PIPE_W     = 52;
+    const GAP        = 180;
+    const START_SPEED = 3.5;
+
+    let dolphin, pipes, score, best, speed, frame, gameRunning, particles;
+
+    best = parseInt(localStorage.getItem("dl_best") || "0");
+    document.getElementById("best-display").textContent = best;
+
+    function initGame() {
+      dolphin = {
+        x: canvas.width * 0.22,
+        y: GROUND_H() - 80,
+        vy: 0,
+        w: 52, h: 34,
+        angle: 0,
+      };
+      pipes   = [];
+      score   = 0;
+      speed   = START_SPEED;
+      frame   = 0;
+      particles = [];
+      gameRunning = true;
+      document.getElementById("score-display").textContent = "0";
+    }
+
+    // ── Dolphin drawing ────────────────────────────────────────────────────
+    function drawDolphin(d) {
+      ctx.save();
+      ctx.translate(d.x, d.y);
+      const angle = Math.max(-0.45, Math.min(0.6, d.vy * 0.045));
+      ctx.rotate(angle);
+
+      // Body
+      ctx.beginPath();
+      ctx.ellipse(0, 0, d.w * 0.5, d.h * 0.38, 0, 0, Math.PI * 2);
+      ctx.fillStyle = C.dolphin();
+      ctx.fill();
+
+      // Snout
+      ctx.beginPath();
+      ctx.ellipse(d.w * 0.46, d.h * 0.04, d.w * 0.18, d.h * 0.13, 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = C.dolphin();
+      ctx.fill();
+
+      // Belly lighter
+      ctx.beginPath();
+      ctx.ellipse(d.w * 0.05, d.h * 0.08, d.w * 0.28, d.h * 0.18, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.25)";
+      ctx.fill();
+
+      // Dorsal fin
+      ctx.beginPath();
+      ctx.moveTo(-d.w * 0.05, -d.h * 0.38);
+      ctx.lineTo(d.w * 0.1,  -d.h * 0.7);
+      ctx.lineTo(d.w * 0.22, -d.h * 0.38);
+      ctx.closePath();
+      ctx.fillStyle = C.dolphin();
+      ctx.fill();
+
+      // Tail
+      ctx.beginPath();
+      ctx.moveTo(-d.w * 0.48, 0);
+      ctx.lineTo(-d.w * 0.75, -d.h * 0.38);
+      ctx.lineTo(-d.w * 0.62,  d.h * 0.04);
+      ctx.lineTo(-d.w * 0.75,  d.h * 0.38);
+      ctx.closePath();
+      ctx.fillStyle = C.dolphin();
+      ctx.fill();
+
+      // Eye
+      ctx.beginPath();
+      ctx.arc(d.w * 0.28, -d.h * 0.08, 4, 0, Math.PI * 2);
+      ctx.fillStyle = C.eye();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(d.w * 0.29, -d.h * 0.09, 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,255,255,0.7)";
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // ── Wave obstacles ─────────────────────────────────────────────────────
+    function spawnPipe() {
+      const gH    = GROUND_H();
+      const minH  = 60;
+      const maxH  = gH - GAP - 60;
+      const topH  = minH + Math.random() * (maxH - minH);
+      pipes.push({ x: canvas.width + PIPE_W, topH, passed: false });
+    }
+
+    function drawWaveRect(x, y, w, h, fromTop) {
+      // Draw a wave-topped rectangle
+      ctx.beginPath();
+      const waveAmp = 8, waveLen = 30;
+      if (fromTop) {
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w, y);
+        ctx.lineTo(x + w, y + h);
+        // wavy bottom
+        for (let wx = x + w; wx >= x; wx -= 4) {
+          const wy = y + h + Math.sin((wx + frame * 2) / waveLen * Math.PI) * waveAmp;
+          ctx.lineTo(wx, wy);
+        }
+      } else {
+        // wavy top
+        ctx.moveTo(x, y);
+        for (let wx = x; wx <= x + w; wx += 4) {
+          const wy = y + Math.sin((wx + frame * 2) / waveLen * Math.PI) * waveAmp;
+          ctx.lineTo(wx, wy);
+        }
+        ctx.lineTo(x + w, y + h);
+        ctx.lineTo(x, y + h);
+      }
+      ctx.closePath();
+      ctx.fillStyle = C.wave();
+      ctx.fill();
+      // Top accent line
+      ctx.beginPath();
+      if (fromTop) {
+        const bY = y + h;
+        for (let wx = x; wx <= x + w; wx += 4) {
+          const wy = bY + Math.sin((wx + frame * 2) / waveLen * Math.PI) * waveAmp;
+          wx === x ? ctx.moveTo(wx, wy) : ctx.lineTo(wx, wy);
+        }
+      } else {
+        for (let wx = x; wx <= x + w; wx += 4) {
+          const wy = y + Math.sin((wx + frame * 2) / waveLen * Math.PI) * waveAmp;
+          wx === x ? ctx.moveTo(wx, wy) : ctx.lineTo(wx, wy);
+        }
+      }
+      ctx.strokeStyle = C.waveTop();
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+
+    // ── Particles ──────────────────────────────────────────────────────────
+    function spawnSplash(x, y) {
+      for (let i = 0; i < 14; i++) {
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: Math.random() * -7 - 1,
+          life: 1, decay: 0.04 + Math.random() * 0.04,
+          r: 2 + Math.random() * 4,
+        });
+      }
+    }
+
+    function updateParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.vy += 0.3;
+        p.life -= p.decay;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+    }
+
+    function drawParticles() {
+      particles.forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = p.life;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = C.splash();
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    // ── Water surface background ───────────────────────────────────────────
+    function drawScene() {
+      const W = canvas.width, H = canvas.height, gH = GROUND_H();
+
+      // Sky
+      ctx.fillStyle = C.sky();
+      ctx.fillRect(0, 0, W, gH);
+
+      // Water
+      ctx.fillStyle = C.water();
+      ctx.fillRect(0, gH, W, H - gH);
+
+      // Water surface wave
+      ctx.beginPath();
+      ctx.moveTo(0, gH);
+      for (let wx = 0; wx <= W; wx += 4) {
+        const wy = gH + Math.sin((wx + frame * 1.5) / 40 * Math.PI) * 5;
+        ctx.lineTo(wx, wy);
+      }
+      ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+      ctx.fillStyle = C.wave();
+      ctx.globalAlpha = 0.25;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // ── Collision ──────────────────────────────────────────────────────────
+    function hitTest(d, pipes) {
+      const gH = GROUND_H();
+      const margin = 8;
+      const dx = d.x, dy = d.y;
+      const hw = d.w * 0.42, hh = d.h * 0.32;
+
+      if (dy + hh > gH - 4) return true; // hit water
+      if (dy - hh < 0) return true;       // hit ceiling
+
+      for (const p of pipes) {
+        const px = p.x, pw = PIPE_W;
+        if (dx + hw - margin < px || dx - hw + margin > px + pw) continue;
+        if (dy - hh < p.topH + margin) return true;       // top pipe
+        if (dy + hh > p.topH + GAP - margin) return true; // bottom pipe
+      }
+      return false;
+    }
+
+    // ── Game loop ──────────────────────────────────────────────────────────
+    let raf;
+    function loop() {
+      if (!gameRunning) return;
+      frame++;
+
+      // Spawn pipes
+      if (frame % Math.max(60, 110 - Math.floor(score / 3) * 5) === 0) spawnPipe();
+
+      // Speed ramp
+      speed = START_SPEED + score * 0.08;
+
+      // Update dolphin
+      dolphin.vy += GRAVITY;
+      dolphin.y  += dolphin.vy;
+
+      // Update pipes
+      for (let i = pipes.length - 1; i >= 0; i--) {
+        pipes[i].x -= speed;
+        if (!pipes[i].passed && pipes[i].x + PIPE_W < dolphin.x) {
+          pipes[i].passed = true;
+          score++;
+          document.getElementById("score-display").textContent = score;
+        }
+        if (pipes[i].x + PIPE_W < 0) pipes.splice(i, 1);
+      }
+
+      // Collision
+      if (hitTest(dolphin, pipes)) {
+        spawnSplash(dolphin.x, dolphin.y);
+        gameRunning = false;
+        endGame();
+        // Keep drawing particles
+        function drawFinal() {
+          drawScene();
+          pipes.forEach(p => {
+            drawWaveRect(p.x, 0, PIPE_W, p.topH, true);
+            drawWaveRect(p.x, p.topH + GAP, PIPE_W, GROUND_H() - p.topH - GAP, false);
+          });
+          updateParticles();
+          drawParticles();
+          if (particles.length > 0) requestAnimationFrame(drawFinal);
+        }
+        drawFinal();
+        return;
+      }
+
+      updateParticles();
+
+      // Draw
+      drawScene();
+      pipes.forEach(p => {
+        drawWaveRect(p.x, 0, PIPE_W, p.topH, true);
+        drawWaveRect(p.x, p.topH + GAP, PIPE_W, GROUND_H() - p.topH - GAP, false);
+      });
+      drawDolphin(dolphin);
+      drawParticles();
+
+      raf = requestAnimationFrame(loop);
+    }
+
+    function jump() {
+      if (!gameRunning) return;
+      dolphin.vy = JUMP_VEL;
+    }
+
+    function endGame() {
+      if (score > best) {
+        best = score;
+        localStorage.setItem("dl_best", best);
+        document.getElementById("best-display").textContent = best;
+      }
+      document.getElementById("final-score").textContent = score;
+      document.getElementById("final-best").textContent  = best;
+      const msgs = [
+        "Even dolphins need a warm-up 🌊",
+        "The ocean forgives. Try again! 🐬",
+        "That wave had it in for you 😅",
+        "So close! One more leap 🌟",
+        "A splash is just the beginning 💧",
+      ];
+      document.getElementById("over-msg").textContent = msgs[Math.floor(Math.random() * msgs.length)];
+      document.getElementById("over-screen").classList.remove("hidden");
+    }
+
+    function startGame() {
+      cancelAnimationFrame(raf);
+      document.getElementById("start-screen").classList.add("hidden");
+      document.getElementById("over-screen").classList.add("hidden");
+      initGame();
+      loop();
+    }
+
+    // ── Controls ───────────────────────────────────────────────────────────
+    canvas.addEventListener("pointerdown", e => { e.preventDefault(); jump(); });
+    document.addEventListener("keydown", e => { if (e.code === "Space") { e.preventDefault(); jump(); } });
+    document.getElementById("start-btn").addEventListener("click", startGame);
+    document.getElementById("retry-btn").addEventListener("click", startGame);
+
+    // Draw static background while on start screen
+    resize();
+    drawScene();
+  </script>
+</body>
+</html>

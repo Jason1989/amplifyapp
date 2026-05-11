@@ -193,6 +193,33 @@
       opacity: 0.4;
       cursor: default;
     }
+    .btn-share {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-share:hover {
+      background: var(--blue-light);
+      border-color: rgba(135,191,222,0.4);
+      color: var(--blue-dark);
+    }
+    .btn-share:active { transform: scale(0.97); }
+    .btn-share.copied {
+      background: var(--green-light);
+      border-color: rgba(126,200,160,0.4);
+      color: var(--green-dark);
+    }
     .dot-nav { display: flex; gap: 7px; align-items: center; }
     .dot {
       width: 7px; height: 7px;
@@ -227,6 +254,10 @@
     </div>
     <div class="actions">
       <div class="dot-nav" id="dots"></div>
+      <button class="btn-share" id="btn-share" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        share
+      </button>
       <button class="btn-next" id="btn-next" disabled>another one →</button>
     </div>
     <p class="tagline">a small dose of warmth, every visit</p>
@@ -259,9 +290,11 @@
     const DOTS = 5;
 
     // ── DOM refs ─────────────────────────────────────────────────────────────
-    const cardEl  = document.getElementById("card");
-    const dotsEl  = document.getElementById("dots");
-    const btnNext = document.getElementById("btn-next");
+    const cardEl    = document.getElementById("card");
+    const dotsEl    = document.getElementById("dots");
+    const btnNext   = document.getElementById("btn-next");
+    const btnShare  = document.getElementById("btn-share");
+    let currentMoment = null;
 
     // ── Fetchers ─────────────────────────────────────────────────────────────
     async function fetchQuote() {
@@ -318,11 +351,13 @@
     }
 
     function showMoment(m) {
+      currentMoment = m;
       cardEl.innerHTML = `
         <span class="deco">${m.deco}</span>
         <span class="badge ${badgeClass[m.type]}">${badgeLabel[m.type]}</span>
         <p class="main-text">${m.text}</p>
         <p class="source">${m.source}</p>`;
+      btnShare.style.display = "flex";
     }
 
     function buildDots() {
@@ -362,6 +397,31 @@
     })();
 
     btnNext.addEventListener("click", loadNext);
+
+    btnShare.addEventListener("click", async () => {
+      if (!currentMoment) return;
+      const shareText = `${currentMoment.text} ${currentMoment.source}`;
+      const shareData = {
+        title: "avacadolphin",
+        text: shareText,
+        url: window.location.href,
+      };
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        // Mobile: native share sheet
+        try { await navigator.share(shareData); } catch (_) {}
+      } else {
+        // Desktop: copy to clipboard
+        try {
+          await navigator.clipboard.writeText(`${shareText}\n\n${window.location.href}`);
+          btnShare.classList.add("copied");
+          btnShare.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> copied!`;
+          setTimeout(() => {
+            btnShare.classList.remove("copied");
+            btnShare.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> share`;
+          }, 2000);
+        } catch (_) {}
+      }
+    });
   </script>
 </body>
 </html>

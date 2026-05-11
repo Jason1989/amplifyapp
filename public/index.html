@@ -40,9 +40,7 @@
         --blue-light: #0b1e2d;
       }
     }
-    html, body {
-      height: 100%;
-    }
+    html, body { height: 100%; }
     body {
       font-family: 'DM Sans', sans-serif;
       background-color: var(--bg);
@@ -56,7 +54,6 @@
       overflow-x: hidden;
       position: relative;
     }
-    /* Soft background blobs */
     .blob {
       position: fixed;
       border-radius: 50%;
@@ -68,7 +65,6 @@
     .blob1 { width: 400px; height: 400px; background: var(--green-mid); top: -100px; left: -120px; }
     .blob2 { width: 320px; height: 320px; background: var(--amber-mid); bottom: -80px; right: -80px; }
     .blob3 { width: 220px; height: 220px; background: var(--blue-mid); top: 45%; left: 65%; }
-    /* Main wrapper */
     .wrapper {
       position: relative;
       z-index: 1;
@@ -78,7 +74,6 @@
       width: 100%;
       max-width: 480px;
     }
-    /* Site name */
     .site-name {
       font-family: 'Lora', Georgia, serif;
       font-size: 13px;
@@ -88,7 +83,6 @@
       color: var(--text-tertiary);
       margin-bottom: 2.5rem;
     }
-    /* Card */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -97,19 +91,22 @@
       width: 100%;
       text-align: center;
       transition: opacity 0.45s ease, transform 0.45s ease;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
     .card.fade-out {
       opacity: 0;
       transform: translateY(10px);
     }
-    /* Emoji decoration */
     .deco {
       font-size: 36px;
       display: block;
       margin-bottom: 1.2rem;
       line-height: 1;
     }
-    /* Type badge */
     .badge {
       display: inline-block;
       font-size: 11px;
@@ -123,7 +120,6 @@
     .badge-quote  { background: var(--green-light); color: var(--green-dark); border: 1px solid rgba(126,200,160,0.3); }
     .badge-prompt { background: var(--amber-light); color: var(--amber-dark); border: 1px solid rgba(240,201,122,0.35); }
     .badge-fact   { background: var(--blue-light);  color: var(--blue-dark);  border: 1px solid rgba(135,191,222,0.3); }
-    /* Main quote / message text */
     .main-text {
       font-family: 'Lora', Georgia, serif;
       font-size: 21px;
@@ -132,7 +128,6 @@
       color: var(--text-primary);
       margin-bottom: 1.2rem;
     }
-    /* Source / attribution */
     .source {
       font-size: 13px;
       font-weight: 300;
@@ -140,7 +135,33 @@
       color: var(--text-tertiary);
       letter-spacing: 0.03em;
     }
-    /* Bottom actions */
+    /* Loading shimmer */
+    .loading-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+    }
+    .shimmer {
+      background: linear-gradient(90deg, var(--border) 25%, rgba(0,0,0,0.04) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .shimmer {
+        background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.06) 75%);
+        background-size: 200% 100%;
+      }
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .shimmer-line { height: 16px; width: 80%; }
+    .shimmer-line.short { width: 50%; height: 13px; }
+    .shimmer-line.long  { width: 90%; }
     .actions {
       display: flex;
       align-items: center;
@@ -168,7 +189,10 @@
       color: var(--green-dark);
     }
     .btn-next:active { transform: scale(0.97); }
-    /* Dot navigation */
+    .btn-next:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
     .dot-nav { display: flex; gap: 7px; align-items: center; }
     .dot {
       width: 7px; height: 7px;
@@ -177,10 +201,8 @@
       border: 1px solid var(--text-tertiary);
       opacity: 0.3;
       transition: opacity 0.3s, transform 0.3s;
-      cursor: default;
     }
     .dot.active { opacity: 1; transform: scale(1.3); background: var(--text-tertiary); }
-    /* Footer tagline */
     .tagline {
       font-size: 12px;
       font-weight: 300;
@@ -201,81 +223,145 @@
   <div class="wrapper">
     <div class="site-name">avacadolphin</div>
     <div class="card" id="card">
-      <span class="deco" id="deco">🌿</span>
-      <span class="badge" id="badge">quote</span>
-      <p class="main-text" id="main-text"></p>
-      <p class="source" id="source"></p>
+      <!-- Populated by JS -->
     </div>
     <div class="actions">
       <div class="dot-nav" id="dots"></div>
-      <button class="btn-next" id="btn-next">another one →</button>
+      <button class="btn-next" id="btn-next" disabled>another one →</button>
     </div>
     <p class="tagline">a small dose of warmth, every visit</p>
   </div>
+
   <script>
-    const moments = [
-      { type: "quote",  deco: "🌱", text: "You are allowed to be both a masterpiece and a work in progress, simultaneously.", source: "— Sophia Bush" },
-      { type: "prompt", deco: "✉️", text: "Think of someone who made you smile this week. Take a moment to let them know.", source: "a gentle nudge" },
-      { type: "fact",   deco: "🐬", text: "Dolphins sleep with one eye open — they rest one half of their brain at a time, always staying a little aware.", source: "a fun fact" },
-      { type: "quote",  deco: "🥑", text: "Be somebody who makes everybody feel like a somebody.", source: "— Kid President" },
-      { type: "prompt", deco: "☀️", text: "Name three things, however small, that went right today.", source: "a little reflection" },
-      { type: "quote",  deco: "🌊", text: "Even the darkest night will end, and the sun will rise.", source: "— Victor Hugo" },
-      { type: "fact",   deco: "🌿", text: "Avocados are technically a fruit — a single-seeded berry — and they take about 18 months to grow from flower to the one in your hand.", source: "a fun fact" },
-      { type: "prompt", deco: "💌", text: "Write down one kind thing you'd say to a friend who was having your exact day.", source: "a gentle nudge" },
-      { type: "quote",  deco: "🌸", text: "Wherever you are is exactly where you need to be.", source: "— unknown" },
-      { type: "fact",   deco: "🐬", text: "Dolphins have names for each other — they develop unique signature whistles that other dolphins use to call them.", source: "a fun fact" },
-      { type: "prompt", deco: "🌙", text: "Before you sleep tonight, think of one person you're grateful to have in your life.", source: "a gentle nudge" },
-      { type: "quote",  deco: "🌱", text: "Start where you are. Use what you have. Do what you can.", source: "— Arthur Ashe" },
-      { type: "fact",   deco: "🥑", text: "The word 'avocado' comes from the Nahuatl word 'āhuacatl'. The Aztecs called it the fertility fruit.", source: "a fun fact" },
-      { type: "quote",  deco: "☁️", text: "Kindness is free. Sprinkle that stuff everywhere.", source: "— unknown" },
-      { type: "prompt", deco: "🌻", text: "Step outside for two minutes, even just to feel the air. That counts.", source: "a gentle nudge" },
-      { type: "quote",  deco: "🐬", text: "In every walk with nature, one receives far more than they seek.", source: "— John Muir" },
-      { type: "fact",   deco: "🌊", text: "The ocean produces over 50% of the world's oxygen — more than all the world's forests combined.", source: "a fun fact" },
-      { type: "prompt", deco: "🕯️", text: "Do one small thing today purely because it makes you happy — no reason needed.", source: "a gentle nudge" },
+    // ── Config ──────────────────────────────────────────────────────────────
+    const QUOTE_DECOS  = ['🌱','🌸','🌊','☁️','🌻','🌿','🥑','🐬'];
+    const FACT_DECOS   = ['🐬','🌊','🌿','🥑','✨','🔭','🌍'];
+    const PROMPT_DECOS = ['✉️','☀️','💌','🌙','🕯️','🌻','🫧'];
+
+    const nudges = [
+      { deco: "✉️", text: "Think of someone who made you smile this week. Take a moment to let them know.", source: "a gentle nudge" },
+      { deco: "☀️", text: "Name three things, however small, that went right today.", source: "a little reflection" },
+      { deco: "💌", text: "Write down one kind thing you'd say to a friend who was having your exact day.", source: "a gentle nudge" },
+      { deco: "🌙", text: "Before you sleep tonight, think of one person you're grateful to have in your life.", source: "a gentle nudge" },
+      { deco: "🌻", text: "Step outside for two minutes, even just to feel the air. That counts.", source: "a gentle nudge" },
+      { deco: "🕯️", text: "Do one small thing today purely because it makes you happy — no reason needed.", source: "a gentle nudge" },
+      { deco: "🫧", text: "Take three slow breaths. You don't need to earn rest.", source: "a gentle nudge" },
+      { deco: "💛", text: "Send a message to someone you haven't spoken to in a while. They'll appreciate it.", source: "a gentle nudge" },
+      { deco: "🌿", text: "Drink a glass of water. Small things add up.", source: "a gentle nudge" },
+      { deco: "✨", text: "Celebrate one tiny win from today — even if nobody else noticed.", source: "a gentle nudge" },
     ];
+
     const badgeClass = { quote: "badge-quote", prompt: "badge-prompt", fact: "badge-fact" };
     const badgeLabel = { quote: "quote", prompt: "gentle nudge", fact: "fun fact" };
+
+    // ── State ────────────────────────────────────────────────────────────────
+    let count = 0;
     const DOTS = 5;
-    let current = Math.floor(Math.random() * moments.length);
-    let history = [current];
-    const cardEl   = document.getElementById("card");
-    const decoEl   = document.getElementById("deco");
-    const badgeEl  = document.getElementById("badge");
-    const textEl   = document.getElementById("main-text");
-    const sourceEl = document.getElementById("source");
-    const dotsEl   = document.getElementById("dots");
-    function render(idx) {
-      const m = moments[idx];
-      decoEl.textContent   = m.deco;
-      badgeEl.textContent  = badgeLabel[m.type];
-      badgeEl.className    = "badge " + badgeClass[m.type];
-      textEl.textContent   = m.text;
-      sourceEl.textContent = m.source;
+
+    // ── DOM refs ─────────────────────────────────────────────────────────────
+    const cardEl  = document.getElementById("card");
+    const dotsEl  = document.getElementById("dots");
+    const btnNext = document.getElementById("btn-next");
+
+    // ── Fetchers ─────────────────────────────────────────────────────────────
+    async function fetchQuote() {
+      const res = await fetch("https://api.quotable.io/random?tags=inspirational|happiness|mindfulness|life|friendship");
+      if (!res.ok) throw new Error("quote fetch failed");
+      const data = await res.json();
+      const deco = QUOTE_DECOS[Math.floor(Math.random() * QUOTE_DECOS.length)];
+      return { type: "quote", deco, text: data.content, source: `— ${data.author}` };
     }
+
+    async function fetchFact() {
+      const res = await fetch("https://uselessfacts.jsph.pl/api/v2/facts/random?language=en");
+      if (!res.ok) throw new Error("fact fetch failed");
+      const data = await res.json();
+      const deco = FACT_DECOS[Math.floor(Math.random() * FACT_DECOS.length)];
+      return { type: "fact", deco, text: data.text, source: "a fun fact" };
+    }
+
+    function getRandomNudge() {
+      const nudge = nudges[Math.floor(Math.random() * nudges.length)];
+      return { type: "prompt", ...nudge };
+    }
+
+    // Fallback quotes in case API is down
+    const fallbackQuotes = [
+      { type: "quote", deco: "🌱", text: "You are allowed to be both a masterpiece and a work in progress, simultaneously.", source: "— Sophia Bush" },
+      { type: "quote", deco: "🥑", text: "Be somebody who makes everybody feel like a somebody.", source: "— Kid President" },
+      { type: "quote", deco: "🌊", text: "Even the darkest night will end, and the sun will rise.", source: "— Victor Hugo" },
+      { type: "quote", deco: "🌸", text: "Start where you are. Use what you have. Do what you can.", source: "— Arthur Ashe" },
+    ];
+
+    async function getNextMoment() {
+      const roll = Math.random();
+      if (roll < 0.45) {
+        try { return await fetchQuote(); }
+        catch { return fallbackQuotes[Math.floor(Math.random() * fallbackQuotes.length)]; }
+      } else if (roll < 0.75) {
+        try { return await fetchFact(); }
+        catch { return getRandomNudge(); }
+      } else {
+        return getRandomNudge();
+      }
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function showLoading() {
+      cardEl.innerHTML = `
+        <div class="loading-wrap">
+          <div class="shimmer shimmer-line short"></div>
+          <div class="shimmer shimmer-line long"></div>
+          <div class="shimmer shimmer-line"></div>
+          <div class="shimmer shimmer-line short"></div>
+        </div>`;
+    }
+
+    function showMoment(m) {
+      cardEl.innerHTML = `
+        <span class="deco">${m.deco}</span>
+        <span class="badge ${badgeClass[m.type]}">${badgeLabel[m.type]}</span>
+        <p class="main-text">${m.text}</p>
+        <p class="source">${m.source}</p>`;
+    }
+
     function buildDots() {
       dotsEl.innerHTML = "";
-      const count = Math.min(history.length, DOTS);
-      for (let i = 0; i < count; i++) {
+      const shown = Math.min(count, DOTS);
+      for (let i = 0; i < shown; i++) {
         const d = document.createElement("div");
-        d.className = "dot" + (i === count - 1 ? " active" : "");
+        d.className = "dot" + (i === shown - 1 ? " active" : "");
         dotsEl.appendChild(d);
       }
     }
-    function nextCard() {
+
+    async function loadNext() {
+      btnNext.disabled = true;
       cardEl.classList.add("fade-out");
-      setTimeout(() => {
-        let next;
-        do { next = Math.floor(Math.random() * moments.length); } while (next === current);
-        current = next;
-        history.push(current);
-        render(current);
-        buildDots();
-        cardEl.classList.remove("fade-out");
-      }, 300);
+      await new Promise(r => setTimeout(r, 300));
+      showLoading();
+      cardEl.classList.remove("fade-out");
+      const moment = await getNextMoment();
+      cardEl.classList.add("fade-out");
+      await new Promise(r => setTimeout(r, 200));
+      showMoment(moment);
+      count++;
+      buildDots();
+      cardEl.classList.remove("fade-out");
+      btnNext.disabled = false;
     }
-    document.getElementById("btn-next").addEventListener("click", nextCard);
-    render(current);
-    buildDots();
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    (async () => {
+      showLoading();
+      const moment = await getNextMoment();
+      showMoment(moment);
+      count = 1;
+      buildDots();
+      btnNext.disabled = false;
+    })();
+
+    btnNext.addEventListener("click", loadNext);
   </script>
 </body>
 </html>
